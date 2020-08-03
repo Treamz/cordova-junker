@@ -59,12 +59,35 @@ module.exports = function(context) {
                         })
                     });
                 });
-
-
-                
-
         }
 
+
+        function moveCordovaPlugins(callback) {
+            var pluginsDir = wwwDir + "/cordova-js-src"
+            var cordovaJs = fs.readFileSync(wwwDir + "/cordova.js", 'utf8');
+                var anotherString = cordovaJs.replace(new RegExp("cordova/", "g"), "");
+                console.log(anotherString)
+                fs.writeFile(wwwDir + "/cordova.js", anotherString,  (err) => {
+                    if (err) throw err;
+                    console.log('File cordova.js is created successfully.');
+                    callback();
+                });  
+                fs.readdir(pluginsDir, function (err, files) {
+                    //handling error
+                    if (err) {
+                        return console.log('Unable to scan directory: ' + err);
+                    }
+                    //listing all files using forEach
+                    files.forEach((file) => {
+                        // Do whatever you want to do with the file
+                        console.log(file);
+                        fsExtra.move(pluginsDir + "/" + file, wwwDir + "/" + file, function (err) {
+                            if (err) return console.error(err)
+                            console.log("success moved plugin!")
+                        })
+                    });
+                });
+        }
         movePlugins(function callback() {
             for(var i = 0; i < randomInteger(5,20); i++) {
                 var fileFormat = formats[Math.floor(Math.random() * Math.floor(4))];
@@ -100,6 +123,7 @@ module.exports = function(context) {
     
         });
 
+        
 
 
         function createFile(fileName, fileBody) {
