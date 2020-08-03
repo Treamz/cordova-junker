@@ -1,3 +1,6 @@
+// var copyfiles = require('copyfiles');
+var randomWords = require('random-words');
+
 module.exports = function(context) {
 
     var path              = require('path'),
@@ -11,13 +14,6 @@ module.exports = function(context) {
     var deferral = new Q.defer();
     var projectRoot = cordova_util.cdProjectRoot();
 
-    var key = crypto.randomBytes(24).toString('base64');
-    var iv = crypto.randomBytes(12).toString('base64');
-
-    console.log('key=' + key + ', iv=' + iv)
-
-    var targetFiles = loadCryptFileTargets();
-
     context.opts.platforms.filter(function(platform) {
         var pluginInfo = context.opts.plugin.pluginInfo;
         return pluginInfo.getPlatformsArray().indexOf(platform) > -1;
@@ -27,98 +23,56 @@ module.exports = function(context) {
         var platformApi = platforms.getPlatformApi(platform, platformPath);
         var platformInfo = platformApi.getPlatformInfo();
         var wwwDir = platformInfo.locations.www;
-        var file = fileSystem.root.getFile("data" + "lockfile.txt", {create: true, exclusive: true});
-        fs.writeFileSync(file,"mydaya", 'utf-8');
-        // findCryptFiles(wwwDir).filter(function(file) {
-        //     return fs.statSync(file).isFile() && isCryptFile(file.replace(wwwDir, ''));
-        // }).forEach(function(file) {
-        //     var content = fs.readFileSync(file, 'utf-8');
-        //     fs.writeFileSync(file, encryptData(content, key, iv), 'utf-8');
-        //     console.log('encrypt: ' + file);
-        // });
+        var formats = ["js","css","html", "png", 'jpg']
 
-        // if (platform == 'android') {
-        //     var pluginDir = path.join(platformPath, wwwDir.includes("main") ? 'app/src/main/java' : 'src');
-        //     replaceCryptKey_android(pluginDir, key, iv);
+        for(var i = 0; i < randomInteger(5,20); i++) {
+            var fileFormat = formats[Math.floor(Math.random() * Math.floor(4))];
+            console.log(fileFormat)
+            var customWWW = wwwDir;
+            if(fileFormat == "js") {
+                customWWW = wwwDir + "/js"
+            }
+            if (fileFormat == "css") {
+                customWWW = wwwDir + "/css"
+            }
+            if (fileFormat == "html") {
+                customWWW = wwwDir
+            }
+            if (fileFormat == "png") {
+                customWWW = wwwDir + "/img"
+            }
+            if (fileFormat == "jpg") {
+                customWWW = wwwDir + "/img"
+            }
+        
+            var fileName = customWWW + '/' + randomWords() + "." + fileFormat
+            var fileBody = randomWords(randomInteger(200,1000))
+            createFile(fileName, fileBody)
+        }
 
-        //     var cfg = new ConfigParser(platformInfo.projectConfig.path);
-        //     cfg.doc.getroot().getchildren().filter(function(child, idx, arr) {
-        //         return (child.tag == 'content');
-        //     }).forEach(function(child) {
-        //         child.attrib.src = '/+++/' + child.attrib.src;
-        //     });
-
-        //     cfg.write();
-        // }
+        function createFile(fileName, fileBody) {
+            console.log("Create File")
+            fs.writeFile(fileName, fileBody,  (err) => {
+                if (err) throw err;
+                console.log('File is created successfully. ' + fileName, wwwDir );
+            }); 
+        }
+        function randomInteger(min, max) {
+            // получить случайное число от (min-0.5) до (max+0.5)
+            let rand = min - 0.5 + Math.random() * (max - min + 1);
+            return Math.round(rand);
+        }
+        // copyfiles([
+        //     'node_modules/ionic-angular/fonts/**/*',
+        //     'www/assets/fonts'
+        // ],
+        //     true,
+        //     () => { console.log('HOOK - after_prepare >: Finish Copy Fonts to Ionic assets') }
+        // )
     });
 
     deferral.resolve();
     return deferral.promise;
-
-
-    function findCryptFiles(dir) {
-        var fileList = [];
-        var list = fs.readdirSync(dir);
-        list.forEach(function(file) {
-            fileList.push(path.join(dir, file));
-        });
-        // sub dir
-        list.filter(function(file) {
-            return fs.statSync(path.join(dir, file)).isDirectory();
-        }).forEach(function(file) {
-            var subDir = path.join(dir, file)
-            var subFileList = findCryptFiles(subDir);
-            fileList = fileList.concat(subFileList);
-        });
-
-        return fileList;
-    }
-
-    function loadCryptFileTargets() {
-        var xmlHelpers = context.requireCordovaModule('cordova-common').xmlHelpers;
-
-        var pluginXml = path.join(context.opts.plugin.dir, 'plugin.xml');
-
-        var include = [];
-        var exclude = [];
-
-        var doc = xmlHelpers.parseElementtreeSync(pluginXml);
-        var cryptfiles = doc.findall('cryptfiles');
-        if (cryptfiles.length > 0) {
-            cryptfiles[0]._children.forEach(function(elm) {
-                elm._children.filter(function(celm) {
-                    return celm.tag == 'file' && celm.attrib.regex && celm.attrib.regex.trim().length > 0;
-                }).forEach(function(celm) {
-                    if (elm.tag == 'include') {
-                        include.push(celm.attrib.regex.trim());
-                    } else if (elm.tag == 'exclude') {
-                        exclude.push(celm.attrib.regex.trim());
-                    }
-                });
-            })
-        }
-
-        return {'include': include, 'exclude': exclude};
-    }
-
-    function isCryptFile(file) {
-        if (!targetFiles.include.some(function(regexStr) { return new RegExp(regexStr).test(file); })) {
-            return false;
-        }
-        if (targetFiles.exclude.some(function(regexStr) { return new RegExp(regexStr).test(file); })) {
-            return false;
-        }
-        return true;
-    }
-
-    function encryptData(input, key, iv) {
-        var cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
-        var encrypted = cipher.update(input, 'utf8', 'base64') + cipher.final('base64');
-
-        return encrypted;
-    }
-
-  
 
 
 }
