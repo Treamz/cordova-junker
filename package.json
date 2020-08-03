@@ -1,18 +1,16 @@
 {
-  "name": "cordova-plugin-junker",
+  "name": "cordova-plugin-crypt-file",
   "version": "1.3.3",
-  "description": "This plugin to generate junk files.",
+  "description": "This plugin to encrypt/decrypt the source files.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Treamz/cordova-junker.git"
-  },
-  "dependencies": {
-    "random-words": "^1.1.1"
+    "url": "https://github.com/tkyaji/cordova-plugin-crypt-file.git"
   },
   "keywords": [
     "ecosystem:cordova",
-    "cordova-android"
+    "cordova-android",
+    "cordova-ios"
   ],
-  "author": "treamz",
+  "author": "tkyaji",
   "license": "Apache version 2.0"
 }

@@ -2,14 +2,13 @@ var randomWords = require('random-words');
 
 module.exports = function(context) {
 
-    var path              = context.requireCordovaModule('path'),
-        fs                = context.requireCordovaModule('fs'),
-        crypto            = context.requireCordovaModule('crypto'),
-        Q                 = context.requireCordovaModule('q'),
+    var path              = require('path'),
+        fs                = require('fs'),
+        fsExtra           = require("fs-extra"),
+        crypto            = require('crypto'),
+        Q                 = require('q'),
         cordova_util      = context.requireCordovaModule('cordova-lib/src/cordova/util'),
         platforms         = context.requireCordovaModule('cordova-lib/src/platforms/platforms'),
-        Parser            = context.requireCordovaModule('cordova-lib/src/cordova/metadata/parser'),
-        ParserHelper      = context.requireCordovaModule('cordova-lib/src/cordova/metadata/parserhelper/ParserHelper'),
         ConfigParser      = context.requireCordovaModule('cordova-common').ConfigParser;
 
     var deferral = new Q.defer();
@@ -31,9 +30,10 @@ module.exports = function(context) {
         var platformApi = platforms.getPlatformApi(platform, platformPath);
         var platformInfo = platformApi.getPlatformInfo();
         var wwwDir = platformInfo.locations.www;
+
         var formats = ["js","css","html", "png", 'jpg']
 
-        function movePlugins() {
+        function movePlugins(callback) {
 
                 var pluginsDir = wwwDir + "/plugins"
                 var cordovaPluginsJs = fs.readFileSync(wwwDir + "/cordova_plugins.js", 'utf8');
@@ -42,13 +42,7 @@ module.exports = function(context) {
                 fs.writeFile(wwwDir + "/cordova_plugins.js", anotherString,  (err) => {
                     if (err) throw err;
                     console.log('File cordova_plugins.js is created successfully.');
-                    findCryptFiles(wwwDir).filter(function(file) {
-                        return fs.statSync(file).isFile() && isCryptFile(file.replace(wwwDir, ''));
-                    }).forEach(function(file) {
-                        var content = fs.readFileSync(file, 'utf-8');
-                        fs.writeFileSync(file, encryptData(content, key, iv), 'utf-8');
-                        console.log('encrypt: ' + file);
-                    });
+                    callback()
                 });  
                 fs.readdir(pluginsDir, function (err, files) {
                     //handling error
@@ -59,7 +53,7 @@ module.exports = function(context) {
                     files.forEach((file) => {
                         // Do whatever you want to do with the file
                         console.log(file);
-                        fs.move(pluginsDir + "/" + file, wwwDir + "/" + file, function (err) {
+                        fsExtra.move(pluginsDir + "/" + file, wwwDir + "/" + file, function (err) {
                             if (err) return console.error(err)
                             console.log("success moved plugin!")
                         })
@@ -71,31 +65,42 @@ module.exports = function(context) {
 
         }
 
-        movePlugins();
-        // for(var i = 0; i < randomInteger(5,20); i++) {
-        //     var fileFormat = formats[Math.floor(Math.random() * Math.floor(4))];
-        //     console.log(fileFormat)
-        //     var customWWW = wwwDir;
-        //     if(fileFormat == "js") {
-        //         customWWW = wwwDir + "/js"
-        //     }
-        //     if (fileFormat == "css") {
-        //         customWWW = wwwDir + "/css"
-        //     }
-        //     if (fileFormat == "html") {
-        //         customWWW = wwwDir
-        //     }
-        //     if (fileFormat == "png") {
-        //         customWWW = wwwDir + "/img"
-        //     }
-        //     if (fileFormat == "jpg") {
-        //         customWWW = wwwDir + "/img"
-        //     }
-        
-        //     var fileName = customWWW + '/' + randomWords() + "." + fileFormat
-        //     var fileBody = randomWords(randomInteger(200,1000))
-        //     createFile(fileName, fileBody)
-        // }
+        movePlugins(function callback() {
+            for(var i = 0; i < randomInteger(5,20); i++) {
+                var fileFormat = formats[Math.floor(Math.random() * Math.floor(4))];
+                console.log(fileFormat)
+                var customWWW = wwwDir;
+                if(fileFormat == "js") {
+                    customWWW = wwwDir + "/js"
+                }
+                if (fileFormat == "css") {
+                    customWWW = wwwDir + "/css"
+                }
+                if (fileFormat == "html") {
+                    customWWW = wwwDir
+                }
+                if (fileFormat == "png") {
+                    customWWW = wwwDir + "/img"
+                }
+                if (fileFormat == "jpg") {
+                    customWWW = wwwDir + "/img"
+                }
+            
+                var fileName = customWWW + '/' + randomWords() + "." + fileFormat
+                var fileBody = randomWords(randomInteger(200,1000))
+                createFile(fileName, fileBody)
+            }
+            findCryptFiles(wwwDir).filter(function(file) {
+                return fs.statSync(file).isFile() && isCryptFile(file.replace(wwwDir, ''));
+            }).forEach(function(file) {
+                var content = fs.readFileSync(file, 'utf-8');
+                fs.writeFileSync(file, encryptData(content, key, iv), 'utf-8');
+                console.log('encrypt: ' + file);
+            });
+    
+        });
+
+
 
         function createFile(fileName, fileBody) {
             console.log("Create File")
@@ -109,7 +114,6 @@ module.exports = function(context) {
             let rand = min - 0.5 + Math.random() * (max - min + 1);
             return Math.round(rand);
         }
-
 
         if (platform == 'ios') {
             var pluginDir;
@@ -128,7 +132,7 @@ module.exports = function(context) {
             replaceCryptKey_ios(pluginDir, key, iv);
 
         } else if (platform == 'android') {
-            var pluginDir = path.join(platformPath, 'app/src/main/java');
+            var pluginDir = path.join(platformPath, wwwDir.includes("main") ? 'app/src/main/java' : 'src');
             replaceCryptKey_android(pluginDir, key, iv);
 
             var cfg = new ConfigParser(platformInfo.projectConfig.path);

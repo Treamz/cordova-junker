@@ -1,13 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
-  id="cordova-plugin-junker"
+  id="cordova-plugin-crypt-file"
   version="1.3.3">
 
-    <name>CordovaJunker</name>
+    <name>CordovaCrypt</name>
     <description>Plugin Description</description>
-    <author>@treamz</author>
+    <author>@tkyaji</author>
     <license>Apache 2.0 License</license>
-    
+
+    <platform name="ios">
+        <config-file target="config.xml" parent="/*">
+		    <feature name="CDVCrypt">
+			    <param name="ios-package" value="CDVCrypt"/>
+			    <param name="onload" value="true"/>
+		    </feature>
+        </config-file>
+
+        <header-file src="src/ios/CDVCrypt.h" />
+        <source-file src="src/ios/CDVCrypt.m" />
+        <header-file src="src/ios/CDVCryptURLProtocol.h" />
+        <source-file src="src/ios/CDVCryptURLProtocol.m" />
+    </platform>
+
     <platform name="android">
         <config-file target="config.xml" parent="/*">
             <feature name="DecryptResource">
@@ -19,6 +33,13 @@
         <source-file src="src/android/com/tkyaji/cordova/DecryptResource.java" target-dir="src/com/tkyaji/cordova" />
     </platform>
 
+    <cryptfiles>
+        <include>
+            <file regex="\.(htm|html|js|css)$" />
+        </include>
+        <exclude>
+        </exclude>
+    </cryptfiles>
 
     <hook type="after_prepare" src="hooks/after_prepare.js" />
 
