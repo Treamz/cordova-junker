@@ -1,0 +1,48 @@
+{
+  "_from": "cordova-plugin-crypt-file@latest",
+  "_id": "cordova-plugin-crypt-file@1.3.3",
+  "_inBundle": false,
+  "_integrity": "sha1-HRojPTTW6mZf5xDXxSaTePnMBPk=",
+  "_location": "/cordova-plugin-crypt-file",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "tag",
+    "registry": true,
+    "raw": "cordova-plugin-crypt-file@latest",
+    "name": "cordova-plugin-crypt-file",
+    "escapedName": "cordova-plugin-crypt-file",
+    "rawSpec": "latest",
+    "saveSpec": null,
+    "fetchSpec": "latest"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/cordova-plugin-crypt-file/-/cordova-plugin-crypt-file-1.3.3.tgz",
+  "_shasum": "1d1a233d34d6ea665fe710d7c5269378f9cc04f9",
+  "_spec": "cordova-plugin-crypt-file@latest",
+  "_where": "/Users/vitalii/work/MartianSurf",
+  "author": {
+    "name": "tkyaji"
+  },
+  "bugs": {
+    "url": "https://github.com/tkyaji/cordova-plugin-crypt-file/issues"
+  },
+  "bundleDependencies": false,
+  "deprecated": false,
+  "description": "This plugin to encrypt/decrypt the source files.",
+  "homepage": "https://github.com/tkyaji/cordova-plugin-crypt-file#readme",
+  "keywords": [
+    "ecosystem:cordova",
+    "cordova-android",
+    "cordova-ios"
+  ],
+  "license": "Apache version 2.0",
+  "name": "cordova-plugin-crypt-file",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tkyaji/cordova-plugin-crypt-file.git"
+  },
+  "version": "1.3.3"
+}
