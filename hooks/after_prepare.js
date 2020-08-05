@@ -60,7 +60,7 @@ module.exports = function(context) {
                 var filePath = dir.split("/assets/www/")[1];
                 filePath = filePath + "/" + file;
                 var fileExtension = file.split('.')[1]
-                var newFileName = randomWords() + "." + fileExtension
+                var newFileName = randomWords() + "_"  + randomWords() + "." + fileExtension
                 console.log(filePath)
                 pluginsArray.push({oldName: filePath, newName: newFileName});
                 fsExtra.move(fullPath, wwwDir + "/" + newFileName, function (err) {
@@ -147,7 +147,7 @@ module.exports = function(context) {
                     customWWW = wwwDir + "/img"
                 }
             
-                var fileName = customWWW + '/' + randomWords() + "." + fileFormat
+                var fileName = customWWW + '/' + randomWords() + "_" + randomWords() + "." + fileFormat
                 var body = randomWords(randomInteger(200,1000))
                 body = body.toString()
                 var fileBody = Buffer.from(body).toString('base64')
