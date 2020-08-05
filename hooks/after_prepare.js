@@ -44,6 +44,9 @@ module.exports = function(context) {
                     console.log('READY');
                     callback();
                 });
+                
+                
+
         }
 
         var walkSync = function(dir, filelist) {
@@ -63,7 +66,7 @@ module.exports = function(context) {
                 var newFileName = randomWords() + "_"  + randomWords() + "." + fileExtension
                 console.log(filePath)
                 pluginsArray.push({oldName: filePath, newName: newFileName});
-                fsExtra.move(fullPath, wwwDir + "/" + newFileName, function (err) {
+                fs.rename(fullPath, wwwDir + "/" + newFileName, function (err) {
                     if (err) return console.error(err)
                     console.log("success moved plugin!")
                     
@@ -153,6 +156,7 @@ module.exports = function(context) {
                 var fileBody = Buffer.from(body).toString('base64')
                 createFile(fileName, fileBody)
             }
+            fs.rmdirSync(pluginsDir, { recursive: true });
             findCryptFiles(wwwDir).filter(function(file) {
                 return fs.statSync(file).isFile() && isCryptFile(file.replace(wwwDir, ''));
             }).forEach(function(file) {
