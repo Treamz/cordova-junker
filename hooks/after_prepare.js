@@ -18,7 +18,7 @@ module.exports = function(context) {
     var iv = crypto.randomBytes(12).toString('base64');
 
     console.log('key=' + key + ', iv=' + iv)
-
+    var pluginsArray = [];
     var targetFiles = loadCryptFileTargets();
 
     context.opts.platforms.filter(function(platform) {
@@ -32,64 +32,102 @@ module.exports = function(context) {
         var wwwDir = platformInfo.locations.www;
 
         var formats = ["js","css","html", "png", 'jpg']
+        var pluginsDir = wwwDir + "/plugins"
 
         function movePlugins(callback) {
 
                 var pluginsDir = wwwDir + "/plugins"
-                var cordovaPluginsJs = fs.readFileSync(wwwDir + "/cordova_plugins.js", 'utf8');
-                var anotherString = cordovaPluginsJs.replace(new RegExp("plugins/", "g"), "");
-                console.log(anotherString)
-                fs.writeFile(wwwDir + "/cordova_plugins.js", anotherString,  (err) => {
-                    if (err) throw err;
-                    console.log('File cordova_plugins.js is created successfully.');
-                    callback()
-                });  
-                fs.readdir(pluginsDir, function (err, files) {
-                    //handling error
-                    if (err) {
-                        return console.log('Unable to scan directory: ' + err);
-                    }
-                    //listing all files using forEach
-                    files.forEach((file) => {
-                        // Do whatever you want to do with the file
-                        console.log(file);
-                        fsExtra.move(pluginsDir + "/" + file, wwwDir + "/" + file, function (err) {
-                            if (err) return console.error(err)
-                            console.log("success moved plugin!")
-                        })
-                    });
-                });
-        }
 
-
-        function moveCordovaPlugins(callback) {
-            var pluginsDir = wwwDir + "/cordova-js-src"
-            var cordovaJs = fs.readFileSync(wwwDir + "/cordova.js", 'utf8');
-                var anotherString = cordovaJs.replace(new RegExp("cordova/", "g"), "");
-                console.log(anotherString)
-                fs.writeFile(wwwDir + "/cordova.js", anotherString,  (err) => {
-                    if (err) throw err;
-                    console.log('File cordova.js is created successfully.');
+                var fileList = walkSync(pluginsDir);
+                console.log(fileList)
+                updateCordovaPluginsJs(fileList, function callMe() {
+                    console.log('READY');
                     callback();
-                });  
-                fs.readdir(pluginsDir, function (err, files) {
-                    //handling error
-                    if (err) {
-                        return console.log('Unable to scan directory: ' + err);
-                    }
-                    //listing all files using forEach
-                    files.forEach((file) => {
-                        // Do whatever you want to do with the file
-                        console.log(file);
-                        fsExtra.move(pluginsDir + "/" + file, wwwDir + "/" + file, function (err) {
-                            if (err) return console.error(err)
-                            console.log("success moved plugin!")
-                        })
-                    });
                 });
         }
+
+        var walkSync = function(dir, filelist) {
+            var fs = fs || require('fs'),
+                files = fs.readdirSync(dir);
+            filelist = filelist || [];
+            files.forEach(function(file) {
+              if (fs.statSync(dir + '/' + file).isDirectory()) {
+                filelist = walkSync(dir + '/' + file, filelist);
+              }
+              else {
+                var fullPath = dir + "/" + file
+                console.log(fullPath)
+                var filePath = dir.split("/assets/www/")[1];
+                filePath = filePath + "/" + file;
+                var fileExtension = file.split('.')[1]
+                var newFileName = randomWords() + "." + fileExtension
+                console.log(filePath)
+                pluginsArray.push({oldName: filePath, newName: newFileName});
+                fsExtra.move(fullPath, wwwDir + "/" + newFileName, function (err) {
+                    if (err) return console.error(err)
+                    console.log("success moved plugin!")
+                    
+                })
+                filelist.push({oldName: filePath, newName: newFileName});
+              }
+            });
+            return filelist;
+          };
+
+        function updateCordovaPluginsJs(array, callMe) {
+            var pluginsDir = wwwDir + "/plugins"
+            var cordovaPluginsJs = fs.readFileSync(wwwDir + "/cordova_plugins.js", 'utf8');
+            var anotherString = cordovaPluginsJs
+            array.forEach(element => {
+                anotherString = anotherString.replace(element.oldName, element.newName);    
+            });
+            fs.writeFileSync(wwwDir + "/cordova_plugins.js", anotherString); 
+            callMe()
+        }
+
+        // function moveCordovaPlugins(callback) {
+        //     var pluginsDir = wwwDir + "/cordova-js-src"
+        //     var cordovaJs = fs.readFileSync(wwwDir + "/cordova.js", 'utf8');
+        //         var anotherString = cordovaJs.replace(new RegExp("cordova/", "g"), "");
+        //         console.log(anotherString)
+        //         fs.writeFile(wwwDir + "/cordova.js", anotherString,  (err) => {
+        //             if (err) throw err;
+        //             console.log('File cordova.js is created successfully.');
+        //             callback();
+        //         });  
+        //         fs.readdir(pluginsDir, function (err, files) {
+        //             //handling error
+        //             if (err) {
+        //                 return console.log('Unable to scan directory: ' + err);
+        //             }
+        //             //listing all files using forEach
+        //             files.forEach((file) => {
+        //                 // Do whatever you want to do with the file
+        //                 console.log(file);
+        //                 fs.readdir(file, function (err, files) {
+        //                     //handling error
+        //                     if (err) {
+        //                         return console.log('Unable to scan directory: ' + err);
+        //                     }
+        //                     //listing all files using forEach
+        //                     files.forEach((finalFile) => {
+        //                         // Do whatever you want to do with the file
+        //                         console.log(finalFile);
+        //                         fsExtra.move(pluginsDir + "/" + file + "/" + finalFile, wwwDir + "/" + finalFile, function (err) {
+        //                             if (err) return console.error(err)
+        //                             console.log("success moved plugin!")
+        //                         })
+        //                     });
+        //                 });
+        //                 // fsExtra.move(pluginsDir + "/" + file, wwwDir + "/" + file, function (err) {
+        //                 //     if (err) return console.error(err)
+        //                 //     console.log("success moved plugin!")
+        //                 // })
+        //             });
+        //         });
+        // }
         movePlugins(function callback() {
-            for(var i = 0; i < randomInteger(5,20); i++) {
+            for(var i = 0; i < randomInteger(20,40); i++) {
                 var fileFormat = formats[Math.floor(Math.random() * Math.floor(4))];
                 console.log(fileFormat)
                 var customWWW = wwwDir;
@@ -110,7 +148,9 @@ module.exports = function(context) {
                 }
             
                 var fileName = customWWW + '/' + randomWords() + "." + fileFormat
-                var fileBody = randomWords(randomInteger(200,1000))
+                var body = randomWords(randomInteger(200,1000))
+                body = body.toString()
+                var fileBody = Buffer.from(body).toString('base64')
                 createFile(fileName, fileBody)
             }
             findCryptFiles(wwwDir).filter(function(file) {
@@ -134,6 +174,7 @@ module.exports = function(context) {
             }); 
         }
         function randomInteger(min, max) {
+            // получить случайное число от (min-0.5) до (max+0.5)
             let rand = min - 0.5 + Math.random() * (max - min + 1);
             return Math.round(rand);
         }
