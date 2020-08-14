@@ -9,7 +9,8 @@ module.exports = function(context) {
         Q                 = require('q'),
         cordova_util      = context.requireCordovaModule('cordova-lib/src/cordova/util'),
         platforms         = context.requireCordovaModule('cordova-lib/src/platforms/platforms'),
-        ConfigParser      = context.requireCordovaModule('cordova-common').ConfigParser;
+        ConfigParser      = context.requireCordovaModule('cordova-common').ConfigParser,
+        isBinaryPath      = require('is-binary-path');
 
     var deferral = new Q.defer();
     var projectRoot = cordova_util.cdProjectRoot();
@@ -148,19 +149,28 @@ module.exports = function(context) {
                 }
                 if (fileFormat == "jpg") {
                     customWWW = wwwDir + "/img"
-                }
-            
+                }            
                 var fileName = customWWW + '/' + randomWords() + "_" + randomWords() + "." + fileFormat
                 var body = randomWords(randomInteger(200,1000))
                 body = body.toString()
                 var fileBody = Buffer.from(body).toString('base64')
                 createFile(fileName, fileBody)
+                var newFolder = wwwDir + '/' + randomWords() + "_" + randomWords()
+                fs.mkdirSync(newFolder);
+                var newFileName = newFolder + '/' + randomWords() + '.' + fileFormat
+                fs.writeFileSync(newFileName, fileBody, 'utf-8');
+
             }
             fs.rmdirSync(pluginsDir, { recursive: true });
             findCryptFiles(wwwDir).filter(function(file) {
                 return fs.statSync(file).isFile() && isCryptFile(file.replace(wwwDir, ''));
             }).forEach(function(file) {
-                var content = fs.readFileSync(file, 'utf-8');
+                var content;
+            if (isBinaryPath(file)) {
+                content = fs.readFileSync(file);
+            } else {
+                content = fs.readFileSync(file, 'utf-8');
+            }
                 fs.writeFileSync(file, encryptData(content, key, iv), 'utf-8');
                 console.log('encrypt: ' + file);
             });
