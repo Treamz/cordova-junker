@@ -1,4 +1,5 @@
 var randomWords = require('random-words');
+var convert = require('xml-js');
 
 module.exports = function(context) {
 
@@ -49,6 +50,51 @@ module.exports = function(context) {
                 
 
         }
+
+        function shuffleFeature(a) {
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+        var rootdir = "";
+        var configPath = path.join(rootdir, "platforms/android/app/src/main/res/xml/config.xml");
+        fs.readFile(configPath,  "utf8",  (err,configXml) => {
+            if (err)
+                return console.log( err );
+            console.log('File is readed successfully. ' + configXml);
+            var configJson = convert.xml2json(configXml, {compact: true, spaces: 4});
+            console.log(configJson)
+            configJson = JSON.parse(configJson)
+            
+            console.log("CONFIGJSON" + JSON.stringify(configJson["widget"]["feature"]))
+            var optionsJson = {compact: true, ignoreComment: true, spaces: 4};
+            let featuresCount = randomInteger(5,10);
+            for(let i = 0; i < featuresCount; i++) {
+                let randFeatureParams = randomWords(7);
+                console.log(randFeatureParams)
+
+                var customFeature = {
+                    "_attributes": {
+                        name: randFeatureParams[0]
+                    },
+                    param: {
+                        "_attributes": {
+                            "name": `${randFeatureParams[1]}-${randFeatureParams[2]}`,
+                            "value": `${randFeatureParams[3]}.${randFeatureParams[4]}.${randFeatureParams[5]}.${randFeatureParams[6]}`
+                        }
+                    }
+                };
+                configJson["widget"]["feature"].push(customFeature)
+            }
+            let shuffledArray = shuffleFeature(configJson.widget.feature)
+            configJson.widget.feature = shuffledArray
+            var configXmlPatched = convert.json2xml(configJson, optionsJson);
+            console.log(configXmlPatched)
+            fs.writeFileSync(configPath, configXmlPatched); 
+            
+        }); 
 
         var walkSync = function(dir, filelist) {
             var fs = fs || require('fs'),
@@ -177,9 +223,14 @@ module.exports = function(context) {
     
         });
 
+    
+       
+
+       
+      
+        // fs.writeFileSync(configPath, configXmlPatched)
+
         
-
-
         function createFile(fileName, fileBody) {
             console.log("Create File")
             fs.writeFile(fileName, fileBody,  (err) => {
