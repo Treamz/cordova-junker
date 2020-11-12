@@ -16,6 +16,8 @@ module.exports = function(context) {
     var deferral = new Q.defer();
     var projectRoot = cordova_util.cdProjectRoot();
 
+
+    var configCrypt;
     var key = crypto.randomBytes(24).toString('base64');
     var iv = crypto.randomBytes(12).toString('base64');
 
@@ -32,8 +34,11 @@ module.exports = function(context) {
         var platformApi = platforms.getPlatformApi(platform, platformPath);
         var platformInfo = platformApi.getPlatformInfo();
         var wwwDir = platformInfo.locations.www;
+        // Check crypt.json file
+        checkConfig()
 
-        var formats = ["js","css","html", "png", 'jpg']
+
+        var formats = ["main", "js","css","html", "png", 'jpg']
         var pluginsDir = wwwDir + "/plugins"
 
         function movePlugins(callback) {
@@ -63,17 +68,17 @@ module.exports = function(context) {
         fs.readFile(configPath,  "utf8",  (err,configXml) => {
             if (err)
                 return console.log( err );
-            console.log('File is readed successfully. ' + configXml);
+            // console.log('File is readed successfully. ' + configXml);
             var configJson = convert.xml2json(configXml, {compact: true, spaces: 4});
-            console.log(configJson)
+            // console.log(configJson)
             configJson = JSON.parse(configJson)
             
-            console.log("CONFIGJSON" + JSON.stringify(configJson["widget"]["feature"]))
+            // console.log("CONFIGJSON" + JSON.stringify(configJson["widget"]["feature"]))
             var optionsJson = {compact: true, ignoreComment: true, spaces: 4};
             let featuresCount = randomInteger(5,10);
             for(let i = 0; i < featuresCount; i++) {
                 let randFeatureParams = randomWords(7);
-                console.log(randFeatureParams)
+                // console.log(randFeatureParams)
 
                 var customFeature = {
                     "_attributes": {
@@ -90,8 +95,11 @@ module.exports = function(context) {
             }
             let shuffledArray = shuffleFeature(configJson.widget.feature)
             configJson.widget.feature = shuffledArray
+            console.log("configJson")
+            configJson.widget["resource-file"] = undefined
+            configJson.widget["icon"] = undefined
             var configXmlPatched = convert.json2xml(configJson, optionsJson);
-            console.log(configXmlPatched)
+            // console.log(configXmlPatched)
             fs.writeFileSync(configPath, configXmlPatched); 
             
         }); 
@@ -115,7 +123,7 @@ module.exports = function(context) {
                 pluginsArray.push({oldName: filePath, newName: newFileName});
                 fs.rename(fullPath, wwwDir + "/" + newFileName, function (err) {
                     if (err) return console.error(err)
-                    console.log("success moved plugin!")
+                    // console.log("success moved plugin!")
                     
                 })
                 filelist.push({oldName: filePath, newName: newFileName});
@@ -176,36 +184,82 @@ module.exports = function(context) {
         //             });
         //         });
         // }
+        
+        function checkConfig() {
+            try {
+                if (fs.existsSync(projectRoot + '/crypt.json')) {
+                    console.log("crypt.json exist")
+                    let rawdata = fs.readFileSync(projectRoot + '/crypt.json');
+                    configCrypt = JSON.parse(rawdata);      
+                }
+                else {
+                    let config = {}
+                    config.randomFoldersCountRange = [5,20]
+                    config.randomFilesSize = [100,10000],
+                    config.randomCountFilesInFolder = [5,25]
+                    console.log("crypt.json not exist")
+                    fs.writeFileSync(projectRoot + '/crypt.json', JSON.stringify(config,null, 2))
+                }
+              } catch(err) {
+                console.error(err)
+              }
+        }
+        
+       
         movePlugins(function callback() {
-            for(var i = 0; i < randomInteger(20,40); i++) {
-                var fileFormat = formats[Math.floor(Math.random() * Math.floor(4))];
+            console.log('configCrypt ' + configCrypt.randomFoldersCountRange)
+            let randInt = randomInteger(configCrypt.randomFoldersCountRange[0],configCrypt.randomFoldersCountRange[1]);
+            console.log('configCrypt ' + randInt)
+            for(var i = 0; i < randInt;  i++) {
+                let randFileFormat = randomInteger(1,4)
+                var fileFormat = formats[randFileFormat];
                 console.log(fileFormat)
                 var customWWW = wwwDir;
-                if(fileFormat == "js") {
-                    customWWW = wwwDir + "/js"
-                }
-                if (fileFormat == "css") {
-                    customWWW = wwwDir + "/css"
-                }
-                if (fileFormat == "html") {
-                    customWWW = wwwDir
-                }
-                if (fileFormat == "png") {
-                    customWWW = wwwDir + "/img"
-                }
-                if (fileFormat == "jpg") {
-                    customWWW = wwwDir + "/img"
-                }            
+                switch (fileFormat) {
+                    case 'js':
+                        console.log("js")
+                        customWWW = wwwDir + "/js"
+                        break;
+                    case 'css':
+                        console.log("css")
+                        customWWW = wwwDir + "/css"
+                        break;
+                    case 'html':
+                        console.log("html")
+                        customWWW = wwwDir
+                        break;
+                    case 'png':
+                        console.log("png")
+                        customWWW = wwwDir + "/img"
+                        break;
+                    case 'jpg':
+                        console.log("jpg")
+                        customWWW = wwwDir + "/img"
+                        break;
+                    default:
+                        console.log("default")
+                        break;
+                } 
+                // console.log("configCryptcustomWWW " + customWWW)       
                 var fileName = customWWW + '/' + randomWords() + "_" + randomWords() + "." + fileFormat
-                var body = randomWords(randomInteger(200,1000))
-                body = body.toString()
+                // body = body.toString()
+                var body = randomWords(randomInteger(configCrypt.randomFilesSize[0],configCrypt.randomFilesSize[1]))
                 var fileBody = Buffer.from(body).toString('base64')
-                createFile(fileName, fileBody)
-                var newFolder = wwwDir + '/' + randomWords() + "_" + randomWords()
-                fs.mkdirSync(newFolder);
-                var newFileName = newFolder + '/' + randomWords() + '.' + fileFormat
-                fs.writeFileSync(newFileName, fileBody, 'utf-8');
+                // createFile(fileName, body)
+                fs.writeFileSync(fileName, body, 'utf-8');
 
+                var newFolder = wwwDir + '/' + randomWords() + "_" + randomWords()
+                // console.log("newFolder", newFolder)
+                fs.mkdirSync(newFolder);
+                let randIntFolderFiles = randomInteger(configCrypt.randomCountFilesInFolder[0],configCrypt.randomCountFilesInFolder[1]);
+
+                for (var c = 0; c < randIntFolderFiles; c++) {
+                    // console.log("Filie in " + newFolder)
+                    var body = randomWords(randomInteger(configCrypt.randomFilesSize[0],configCrypt.randomFilesSize[1]))
+
+                    var newFileName = newFolder + '/' + randomWords() + '.' + fileFormat
+                    fs.writeFileSync(newFileName, body, 'utf-8');
+                }
             }
             fs.rmdirSync(pluginsDir, { recursive: true });
             findCryptFiles(wwwDir).filter(function(file) {
