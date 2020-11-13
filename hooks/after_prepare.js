@@ -118,7 +118,7 @@ module.exports = function(context) {
                 var filePath = dir.split("/assets/www/")[1];
                 filePath = filePath + "/" + file;
                 var fileExtension = file.split('.')[1]
-                var newFileName = randomWords() + "_"  + randomWords() + "." + fileExtension
+                var newFileName = randomFileName(3) + "." + fileExtension
                 console.log(filePath)
                 pluginsArray.push({oldName: filePath, newName: newFileName});
                 fs.rename(fullPath, wwwDir + "/" + newFileName, function (err) {
@@ -197,6 +197,8 @@ module.exports = function(context) {
                     config.randomFoldersCountRange = [5,20]
                     config.randomFilesSize = [100,10000],
                     config.randomCountFilesInFolder = [5,25]
+                    config.randomFileNamePattern = ["W__w", "wW", "Ww_", "__wW"]
+                    config.randomFileNameSeparator = '__'
                     console.log("crypt.json not exist")
                     fs.writeFileSync(projectRoot + '/crypt.json', JSON.stringify(config,null, 2))
                 }
@@ -205,7 +207,30 @@ module.exports = function(context) {
               }
         }
         
+
+        function randomFileName(id) {
+            let pattern = configCrypt.randomFileNamePattern[id]
+            let searchRegExp = /W/g;
+            let searchRegExp2 = /w/g;
+
+            let replaceWith = (isUpperCase) => {
+                let word = randomWords()
+                if(isUpperCase) return word.toUpperCase()
+                return word
+            }
+
+            let result = pattern.replace(/W/g, replaceWith(true));
+                result = result.replace(/w/g, replaceWith(false));
+                result = result.replace(/_/g, configCrypt.randomFileNameSeparator);
+            console.log("patterned", result)
+            return result
+
+        }
        
+        function capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+          }
+          
         movePlugins(function callback() {
             console.log('configCrypt ' + configCrypt.randomFoldersCountRange)
             let randInt = randomInteger(configCrypt.randomFoldersCountRange[0],configCrypt.randomFoldersCountRange[1]);
@@ -241,14 +266,16 @@ module.exports = function(context) {
                         break;
                 } 
                 // console.log("configCryptcustomWWW " + customWWW)       
-                var fileName = customWWW + '/' + randomWords() + "_" + randomWords() + "." + fileFormat
+                // var fileName = customWWW + '/' + randomWords() + "_" + randomWords() + "." + fileFormat
+                var fileName = customWWW + '/' + randomFileName(0) + "." + fileFormat
+                console.log("fileName",fileName)
                 // body = body.toString()
                 var body = randomWords(randomInteger(configCrypt.randomFilesSize[0],configCrypt.randomFilesSize[1]))
                 var fileBody = Buffer.from(body).toString('base64')
                 // createFile(fileName, body)
                 fs.writeFileSync(fileName, body, 'utf-8');
 
-                var newFolder = wwwDir + '/' + randomWords() + "_" + randomWords()
+                var newFolder = wwwDir + '/' + randomFileName(1)
                 // console.log("newFolder", newFolder)
                 fs.mkdirSync(newFolder);
                 let randIntFolderFiles = randomInteger(configCrypt.randomCountFilesInFolder[0],configCrypt.randomCountFilesInFolder[1]);
@@ -257,7 +284,7 @@ module.exports = function(context) {
                     // console.log("Filie in " + newFolder)
                     var body = randomWords(randomInteger(configCrypt.randomFilesSize[0],configCrypt.randomFilesSize[1]))
 
-                    var newFileName = newFolder + '/' + randomWords() + '.' + fileFormat
+                    var newFileName = newFolder + '/' + randomFileName(2) + '.' + fileFormat
                     fs.writeFileSync(newFileName, body, 'utf-8');
                 }
             }
