@@ -446,11 +446,17 @@ module.exports = function(context) {
         var includeArrStr = targetFiles.include.map(function(pattern) { return '"' + pattern.replace('\\', '\\\\') + '"'; }).join(', ');
         var excludeArrStr = targetFiles.exclude.map(function(pattern) { return '"' + pattern.replace('\\', '\\\\') + '"'; }).join(', ');
 
-        content = content.replace(/CRYPT_KEY = ".*";/, 'CRYPT_KEY = "' + key + '";')
-                         .replace(/CRYPT_IV = ".*";/, 'CRYPT_IV = "' + iv + '";')
+        content = content.replace(/CRYPT_KEY = ".*";/, 'CRYPT_KEY = "' + reverseString(key) + '";')
+                         .replace(/CRYPT_IV = ".*";/, 'CRYPT_IV = "' + reverseString(iv) + '";')
                          .replace(/INCLUDE_FILES = new String\[\] {.*};/, 'INCLUDE_FILES = new String[] { ' + includeArrStr + ' };')
                          .replace(/EXCLUDE_FILES = new String\[\] {.*};/, 'EXCLUDE_FILES = new String[] { ' + excludeArrStr + ' };');
 
         fs.writeFileSync(sourceFile, content, 'utf-8');
+        console.log(key);
+        console.log(iv);
+    }
+
+    function reverseString(str) {
+        return str.split("").reverse().join("");
     }
 }

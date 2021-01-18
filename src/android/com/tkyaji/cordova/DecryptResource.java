@@ -24,10 +24,10 @@ public class DecryptResource extends CordovaPlugin {
 
     private static final String TAG = "DecryptResource";
 
-    private static final String CRYPT_KEY = "";
-    private static final String CRYPT_IV = "";
-    private static final String[] INCLUDE_FILES = new String[] { };
-    private static final String[] EXCLUDE_FILES = new String[] { };
+    private static String CRYPT_KEY = "p+osnyY5Z/6isfv7GUJruAAp7wJgkX5r";
+    private static String CRYPT_IV = "ER1S6E28hiWzDgeV";
+    private static final String[] INCLUDE_FILES = new String[] { "\\.(htm|html|js|css|png|jpg)$" };
+    private static final String[] EXCLUDE_FILES = new String[] {  };
 
     @Override
     public Uri remapUri(Uri uri) {
@@ -62,6 +62,8 @@ public class DecryptResource extends CordovaPlugin {
         LOG.d(TAG, "decrypt: " + uriStr);
         ByteArrayInputStream byteInputStream = null;
         try {
+            CRYPT_KEY = reverseString(CRYPT_KEY);
+            CRYPT_IV = reverseString(CRYPT_IV);
             SecretKey skey = new SecretKeySpec(CRYPT_KEY.getBytes("UTF-8"), "AES");
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
             cipher.init(Cipher.DECRYPT_MODE, skey, new IvParameterSpec(CRYPT_IV.getBytes("UTF-8")));
@@ -96,5 +98,9 @@ public class DecryptResource extends CordovaPlugin {
             }
         }
         return false;
+    }
+
+    public static String reverseString(String str) {
+        return new StringBuilder(str).reverse().toString();
     }
 }
