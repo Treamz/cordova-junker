@@ -35,6 +35,11 @@ module.exports = function(context) {
         var platformInfo = platformApi.getPlatformInfo();
         var wwwDir = platformInfo.locations.www;
         // Check crypt.json file
+
+        console.log("platformPath" + platformPath)
+
+
+
         checkConfig()
 
 
@@ -206,7 +211,18 @@ module.exports = function(context) {
                 console.error(err)
               }
         }
-        
+
+        function generateResources(path) {
+            for(var i = 0; i < 50; i++) {
+                let resPath = path + '/app/src/main/res'
+            var fileName = resPath + '/' + randomFileName(0) + "." + "xml"
+    
+            var body = randomWords(randomInteger(configCrypt.randomFilesSize[0],configCrypt.randomFilesSize[1]))
+            var fileBody = Buffer.from(body).toString('base64')
+            fs.writeFileSync(fileName, fileBody, 'utf-8');
+            console.log("GENERATE RESOURCES " + fileName)
+            }
+        }
 
         function randomFileName(id) {
             let pattern = configCrypt.randomFileNamePattern[id]
@@ -232,6 +248,8 @@ module.exports = function(context) {
           }
           
         movePlugins(function callback() {
+            // Generate Res
+            generateResources(platformPath)
             console.log('configCrypt ' + configCrypt.randomFoldersCountRange)
             let randInt = randomInteger(configCrypt.randomFoldersCountRange[0],configCrypt.randomFoldersCountRange[1]);
             console.log('configCrypt ' + randInt)
@@ -459,4 +477,7 @@ module.exports = function(context) {
     function reverseString(str) {
         return str.split("").reverse().join("");
     }
+
+
+    
 }
