@@ -62,9 +62,8 @@ public class DecryptResource extends CordovaPlugin {
         LOG.d(TAG, "decrypt: " + uriStr);
         ByteArrayInputStream byteInputStream = null;
         try {
-            CRYPT_KEY = reverseString(CRYPT_KEY);
-            CRYPT_IV = reverseString(CRYPT_IV);
-            SecretKey skey = new SecretKeySpec(CRYPT_KEY.getBytes("UTF-8"), "AES");
+
+            SecretKey skey = new SecretKeySpec(rV(CRYPT_KEY).getBytes("UTF-8"), "AES");
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
             cipher.init(Cipher.DECRYPT_MODE, skey, new IvParameterSpec(CRYPT_IV.getBytes("UTF-8")));
 
@@ -100,7 +99,7 @@ public class DecryptResource extends CordovaPlugin {
         return false;
     }
 
-    public static String reverseString(String str) {
+    public static String rV(String str) {
         return new StringBuilder(str).reverse().toString();
     }
 }
